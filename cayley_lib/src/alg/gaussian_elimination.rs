@@ -16,10 +16,14 @@ impl GaussianElimination {
     {
         // make augmented matrix
         let mut augmented_matrix: Vec<Vec<T>> = vec![vec![T::zero(); b.size() + 1]; b.size()];
-        for r in 0..a.size().rows() {
-            let mut row: Vec<T> = a.get_row(r).iter().map(|e| *e.clone()).collect();
+        for (r, item) in augmented_matrix
+            .iter_mut()
+            .enumerate()
+            .take(a.size().rows())
+        {
+            let mut row: Vec<T> = a.get_row(r).iter().map(|e| *(*e)).collect();
             row.push(*b.get(r).unwrap());
-            augmented_matrix[r] = row;
+            *item = row;
         }
 
         // WP algorithm from Gaussian elimination page
@@ -29,8 +33,13 @@ impl GaussianElimination {
             let mut i_max: usize = k;
             let mut max: T = augmented_matrix[k][k].absolute();
 
-            for i in (k + 1)..b.size() {
-                let abs: T = augmented_matrix[i][k].absolute();
+            for (i, item) in augmented_matrix
+                .iter()
+                .enumerate()
+                .take(b.size())
+                .skip(k + 1)
+            {
+                let abs: T = item[k].absolute();
                 if abs > max {
                     i_max = i;
                     max = abs;
@@ -74,7 +83,7 @@ impl GaussianElimination {
             x[i] /= augmented_matrix[i][i]
         }
 
-        return Some(Vector::new(x, Shape::Col));
+        Some(Vector::new(x, Shape::Col))
     }
 }
 
