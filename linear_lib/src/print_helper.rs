@@ -20,7 +20,7 @@ impl PrintHelper {
         println!("⎡ {first:>width$} ⎤");
 
         for element in elements.iter().take(elements.len() - 1).skip(1) {
-            println!("| {element:>width$} |");
+            println!("⎢ {element:>width$} ⎢");
         }
 
         let last = elements.last().unwrap();

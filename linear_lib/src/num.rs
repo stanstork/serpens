@@ -11,6 +11,7 @@ pub trait Num: AddAssign + MulAssign + Copy + Sized + Display + PartialOrd + Sam
     fn minus_one() -> Self;
     fn from_usize(u: usize) -> Self;
     fn absolute(&self) -> Self;
+    fn from_str(s: &str) -> Self;
 }
 
 impl Num for i32 {
@@ -33,6 +34,10 @@ impl Num for i32 {
     fn absolute(&self) -> Self {
         self.abs()
     }
+
+    fn from_str(s: &str) -> Self {
+        s.parse().unwrap()
+    }
 }
 
 impl Num for f64 {
@@ -54,5 +59,9 @@ impl Num for f64 {
 
     fn absolute(&self) -> Self {
         self.abs()
+    }
+
+    fn from_str(s: &str) -> Self {
+        s.parse().unwrap()
     }
 }
