@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Div, Mul};
 
 use crate::{
     generator::Generator,
@@ -88,12 +88,48 @@ where
         matrix
     }
 
-    pub fn mul(&mut self, val: T) {
-        self.set_elements(self.map(val, |a, &b| a * b));
+    pub fn sum(&self) -> T {
+        self.elements.iter().fold(T::zero(), |mut a, &b| {
+            a += b;
+            a
+        })
     }
 
-    pub fn add(&mut self, val: T) {
-        self.set_elements(self.map(val, |a, &b| a + b));
+    pub fn mean(&self) -> T
+    where
+        T: Div<Output = T>,
+    {
+        self.sum() / T::from_usize(self.elements.len())
+    }
+
+    pub fn mul(&self, val: T) -> Vector<T> {
+        Vector {
+            elements: self.map(val, |a, &b| a * b),
+            shape: self.shape.clone(),
+        }
+    }
+
+    pub fn add(&self, val: T) -> Vector<T> {
+        Vector {
+            elements: self.map(val, |a, &b| a + b),
+            shape: self.shape.clone(),
+        }
+    }
+
+    pub fn add_vector(&self, right: &Vector<T>) -> Result<Vector<T>, &'static str> {
+        if self.size() != right.size() {
+            return Err("invalid vectors size");
+        }
+
+        let mut elements: Vec<T> = vec![T::zero(); self.size()];
+        for i in 0..self.elements.len() {
+            elements[i] = self.elements[i] + right.elements[i];
+        }
+
+        Ok(Vector {
+            elements,
+            shape: self.shape.clone(),
+        })
     }
 
     pub fn map(&self, val: T, f: fn(T, &T) -> T) -> Vec<T> {
@@ -106,10 +142,6 @@ where
 
     pub fn shape(&self) -> &Shape {
         &self.shape
-    }
-
-    fn set_elements(&mut self, elements: Vec<T>) {
-        self.elements = elements;
     }
 }
 
@@ -134,6 +166,18 @@ where
     fn add(self, rhs: T) -> Self::Output {
         let elements = self.map(rhs, |a, &b| a + b);
         Vector::new(elements, *self.shape())
+    }
+}
+
+impl<T> Clone for Vector<T>
+where
+    T: Num,
+{
+    fn clone(&self) -> Self {
+        Self {
+            elements: self.elements.clone(),
+            shape: self.shape.clone(),
+        }
     }
 }
 
@@ -201,29 +245,29 @@ mod test {
 
     #[test]
     fn test_mul() {
-        let mut vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
-        vec.mul(2);
-        for i in 0..vec.size() {
-            assert_eq!(*vec.get(i).unwrap(), ELEMENTS[i] * 2);
+        let vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
+        let res: Vector<i32> = vec.mul(2);
+        for i in 0..res.size() {
+            assert_eq!(*res.get(i).unwrap(), ELEMENTS[i] * 2);
         }
 
         let mul_vec: Vector<i32> = vec * 3;
         for i in 0..mul_vec.size() {
-            assert_eq!(*mul_vec.get(i).unwrap(), ELEMENTS[i] * 6);
+            assert_eq!(*mul_vec.get(i).unwrap(), ELEMENTS[i] * 3);
         }
     }
 
     #[test]
     fn test_add() {
-        let mut vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
-        vec.add(2);
-        for i in 0..vec.size() {
-            assert_eq!(*vec.get(i).unwrap(), ELEMENTS[i] + 2);
+        let vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
+        let res: Vector<i32> = vec.add(2);
+        for i in 0..res.size() {
+            assert_eq!(*res.get(i).unwrap(), ELEMENTS[i] + 2);
         }
 
         let mul_vec: Vector<i32> = vec + 3;
         for i in 0..mul_vec.size() {
-            assert_eq!(*mul_vec.get(i).unwrap(), ELEMENTS[i] + 5);
+            assert_eq!(*mul_vec.get(i).unwrap(), ELEMENTS[i] + 3);
         }
     }
 
@@ -249,5 +293,21 @@ mod test {
 
         assert!(vec1.equals(&vec2));
         assert!(!vec1.equals(&vec3));
+    }
+
+    #[test]
+    fn test_add_vector() {
+        let vec1: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
+        let vec2: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
+        let vec3: Result<Vector<i32>, &str> = vec1.add_vector(&vec2);
+
+        match vec3 {
+            Ok(res) => {
+                for i in 0..res.size() {
+                    assert_eq!(*res.get(i).unwrap(), ELEMENTS[i] * 2)
+                }
+            }
+            Err(e) => panic!("error: {}", e),
+        }
     }
 }
