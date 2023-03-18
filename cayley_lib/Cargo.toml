@@ -3,5 +3,8 @@ name = "cayley"
 version = "0.1.0"
 edition = "2021"
 
+[dependencies]
+plotters = "0.3.4"
+
 [dependencies.linear]
 path = "../linear_lib"

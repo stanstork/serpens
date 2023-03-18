@@ -1,6 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use linear::{num::Num, vector::vector::Vector};
+use plotters::prelude::*;
 
 pub struct LinearRegression<T> {
     x: Vector<T>,
@@ -77,8 +78,49 @@ where
         return self.r_squared;
     }
 
-    pub fn plot(&self) {
-        todo!()
+    pub fn plot(&self, output: &str) {
+        let size: (u32, u32) = (1200, 800);
+        let root_area = BitMapBackend::new(output, size).into_drawing_area();
+
+        root_area.fill(&WHITE).unwrap();
+
+        let min_x = self.x().min().as_f64();
+        let min_y = self.y().min().as_f64();
+        let max_x = self.x().max().as_f64();
+        let max_y = self.y().max().as_f64();
+
+        let label_area_size: i32 = 40;
+        let mut ctx = ChartBuilder::on(&root_area)
+            .set_label_area_size(LabelAreaPosition::Left, label_area_size)
+            .set_label_area_size(LabelAreaPosition::Bottom, label_area_size)
+            .build_cartesian_2d(min_x..max_x, min_y..max_y)
+            .unwrap();
+
+        ctx.configure_mesh().draw().unwrap();
+
+        let circle_size = 5;
+
+        ctx.draw_series(
+            self.x()
+                .elements()
+                .iter()
+                .zip(self.y().elements().iter())
+                .map(|e| (e.0.as_f64(), e.1.as_f64()))
+                .collect::<Vec<(f64, f64)>>()
+                .iter()
+                .map(|point| Circle::new(*point, circle_size, &BLUE)),
+        )
+        .unwrap();
+        ctx.draw_series(LineSeries::new(
+            self.x()
+                .elements()
+                .iter()
+                .zip(self.regression().unwrap().elements().iter())
+                .map(|e| (e.0.as_f64(), e.1.as_f64()))
+                .collect::<Vec<(f64, f64)>>(),
+            &RED,
+        ))
+        .unwrap();
     }
 
     pub fn x(&self) -> &Vector<T> {
@@ -124,13 +166,34 @@ mod test {
             Ok(data) => {
                 let mut lr: LinearRegression<f64> = LinearRegression::new(data.0, data.1);
 
-                println!("{:?}", lr.x());
-                println!("{:?}", lr.y());
+                assert_eq!(100, lr.x().elements().len());
+                assert_eq!(100, lr.y().elements().len());
+
+                assert_eq!(None, lr.coefficient);
+                assert_eq!(None, lr.constant);
 
                 lr.train();
 
-                println!("{:?}", lr.r_squared());
-                println!("{:?}", lr.regression());
+                assert!(lr.coefficient.is_some());
+                assert!(lr.constant.is_some());
+                assert!(lr.r_squared().is_some());
+                assert!(lr.r_squared().unwrap() > 0.99);
+            }
+            Err(e) => panic!("ERROR: {}", e),
+        }
+    }
+
+    #[test]
+    fn test_plot() {
+        let data: Result<(Vector<f64>, Vector<f64>), Error> =
+            Reader::read_2d_csv("test_data/data_1d.csv");
+        match data {
+            Ok(data) => {
+                let mut lr: LinearRegression<f64> = LinearRegression::new(data.0, data.1);
+
+                lr.train();
+                lr.plot("images/2.6.png");
+                // validate image manually
             }
             Err(e) => panic!("ERROR: {}", e),
         }

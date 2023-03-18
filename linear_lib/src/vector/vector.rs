@@ -102,6 +102,14 @@ where
         self.sum() / T::from_usize(self.elements.len())
     }
 
+    pub fn min(&self) -> T {
+        self.elements().iter().fold(T::max(), |a, &b| a.get_min(&b))
+    }
+
+    pub fn max(&self) -> T {
+        self.elements().iter().fold(T::min(), |a, &b| a.get_max(&b))
+    }
+
     pub fn mul(&self, val: T) -> Vector<T> {
         Vector {
             elements: self.map(val, |a, &b| a * b),
@@ -309,5 +317,19 @@ mod test {
             }
             Err(e) => panic!("error: {}", e),
         }
+    }
+
+    #[test]
+    fn test_min() {
+        let vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
+        let min: i32 = vec.min();
+        assert_eq!(1, min);
+    }
+
+    #[test]
+    fn test_max() {
+        let vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
+        let max: i32 = vec.max();
+        assert_eq!(7, max);
     }
 }
