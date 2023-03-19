@@ -8,7 +8,10 @@ use linear::{
 
 use crate::alg::gaussian_elimination::GaussianElimination;
 
-use super::regression::{self, Regression};
+use super::{
+    common::Common,
+    regression::{self, Regression},
+};
 
 pub struct MultLinearRegression<T> {
     x: Matrix<T>,
@@ -60,7 +63,11 @@ where
     }
 
     fn r_squared(&mut self) -> Option<T> {
-        todo!()
+        if self.r_squared.is_none() && self.regression.is_some() {
+            self.r_squared = Common::r_squared(self.y(), self.regression.as_ref().unwrap());
+            return self.r_squared;
+        }
+        return self.r_squared;
     }
 
     fn plot(&self, output: &str) {
@@ -73,13 +80,14 @@ where
     T: Mul<Output = T> + Add<Output = T> + Div<Output = T> + Sub<Output = T> + Num,
 {
     pub fn new(data: Vec<Vec<T>>) -> Self {
-        let x: Matrix<T> = Matrix::new(
-            &data
-                .iter()
-                .take(data.len() - 1)
-                .map(|c| c.clone())
-                .collect(),
-        );
+        let mut elements: Vec<Vec<T>> = vec![vec![]; data[0].len()];
+        for i in 0..data[0].len() {
+            for j in 0..(data.len() - 1) {
+                elements[i].push(data[j][i]);
+            }
+        }
+
+        let x: Matrix<T> = Matrix::new(&elements);
         let y: Vector<T> = Vector::new(data.last().unwrap().clone(), Shape::Col);
 
         MultLinearRegression {
@@ -106,25 +114,38 @@ where
     pub fn set_weights(&mut self, weights: Vector<T>) {
         self.weights = Some(weights);
     }
+
+    pub fn weights(&self) -> Option<&Vector<T>> {
+        self.weights.as_ref()
+    }
 }
 
 #[cfg(test)]
 mod test {
     use std::io::Error;
 
-    use crate::reader::Reader;
+    use crate::{ml::regression::Regression, reader::Reader};
 
     use super::MultLinearRegression;
 
     #[test]
-    fn test_init() {
-        let data: Result<Vec<Vec<f64>>, Error> = Reader::read_nd_csv("test_data/data_2d.csv", 3);
+    fn test_train() {
+        let data: Result<Vec<Vec<f64>>, Error> =
+            Reader::read_nd_csv("/home/stan/serpens/cayley_lib/test_data/data_2d.csv", 3);
         match data {
             Ok(data) => {
-                let mlr: MultLinearRegression<f64> = MultLinearRegression::new(data);
+                let mut mlr: MultLinearRegression<f64> = MultLinearRegression::new(data);
 
                 println!("{:?}", mlr.x());
                 println!("{:?}", mlr.y());
+
+                mlr.train();
+
+                println!("{:?}", mlr.weights().unwrap());
+                println!("{:?}", mlr.r_squared());
+
+                assert!(mlr.r_squared().is_some());
+                assert!(mlr.r_squared().unwrap() > 0.99);
             }
             Err(e) => panic!("ERROR: {}", e),
         }

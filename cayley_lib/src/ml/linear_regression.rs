@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use linear::{num::Num, vector::vector::Vector};
 use plotters::prelude::*;
 
-use super::regression::Regression;
+use super::{common::Common, regression::Regression};
 
 impl<T> Regression<T> for LinearRegression<T>
 where
@@ -34,28 +34,8 @@ where
 
     fn r_squared(&mut self) -> Option<T> {
         if self.r_squared.is_none() && self.regression.is_some() {
-            let rss: Result<Vector<T>, &str> = self
-                .y()
-                .add_vector(&self.regression.as_ref().unwrap().mul(T::minus_one()));
-            match rss {
-                Ok(rss) => {
-                    let tss: Vector<T> = self
-                        .y()
-                        .add(self.regression.as_ref().unwrap().mean().mul(T::minus_one()));
-                    match rss.dot(&rss) {
-                        Ok(rss_dot) => match tss.dot(&tss) {
-                            Ok(tss_dot) => {
-                                let r_squared: T = T::one() - rss_dot / tss_dot;
-                                self.r_squared = Some(r_squared);
-                                return self.r_squared;
-                            }
-                            Err(e) => println!("ERROR: {}", e),
-                        },
-                        Err(e) => println!("ERROR: {}", e),
-                    }
-                }
-                Err(e) => println!("ERROR: {}", e),
-            }
+            self.r_squared = Common::r_squared(self.y(), self.regression.as_ref().unwrap());
+            return self.r_squared;
         }
         return self.r_squared;
     }

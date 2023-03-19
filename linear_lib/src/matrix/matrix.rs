@@ -48,12 +48,12 @@ where
 
         Matrix {
             elements,
-            size: Size::new(rows, cols),
+            size: Size::new(cols, rows),
         }
     }
 
     pub fn product(&self, right: &Matrix<T>) -> Result<Matrix<T>, &'static str> {
-        if self.size().cols() * right.size().cols() != right.elements.len() {
+        if self.size().cols() != right.size().rows() {
             return Err("product is not defined");
         }
 
