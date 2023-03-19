@@ -3,31 +3,13 @@ use std::ops::{Add, Div, Mul, Sub};
 use linear::{num::Num, vector::vector::Vector};
 use plotters::prelude::*;
 
-pub struct LinearRegression<T> {
-    x: Vector<T>,
-    y: Vector<T>,
-    coefficient: Option<T>,
-    constant: Option<T>,
-    regression: Option<Vector<T>>,
-    r_squared: Option<T>,
-}
+use super::regression::Regression;
 
-impl<T> LinearRegression<T>
+impl<T> Regression<T> for LinearRegression<T>
 where
     T: Mul<Output = T> + Add<Output = T> + Div<Output = T> + Sub<Output = T> + Num,
 {
-    pub fn new(x: Vector<T>, y: Vector<T>) -> Self {
-        LinearRegression {
-            x,
-            y,
-            coefficient: None,
-            constant: None,
-            regression: None,
-            r_squared: None,
-        }
-    }
-
-    pub fn train(&mut self) {
+    fn train(&mut self) {
         match self.x().dot(self.x()) {
             Ok(xx_dot) => {
                 let denominator: T = xx_dot - (self.x().mean() * self.x().sum());
@@ -50,7 +32,7 @@ where
         }
     }
 
-    pub fn r_squared(&mut self) -> Option<T> {
+    fn r_squared(&mut self) -> Option<T> {
         if self.r_squared.is_none() && self.regression.is_some() {
             let rss: Result<Vector<T>, &str> = self
                 .y()
@@ -78,7 +60,7 @@ where
         return self.r_squared;
     }
 
-    pub fn plot(&self, output: &str) {
+    fn plot(&self, output: &str) {
         let size: (u32, u32) = (1200, 800);
         let root_area = BitMapBackend::new(output, size).into_drawing_area();
 
@@ -122,6 +104,31 @@ where
         ))
         .unwrap();
     }
+}
+
+pub struct LinearRegression<T> {
+    x: Vector<T>,
+    y: Vector<T>,
+    coefficient: Option<T>,
+    constant: Option<T>,
+    regression: Option<Vector<T>>,
+    r_squared: Option<T>,
+}
+
+impl<T> LinearRegression<T>
+where
+    T: Mul<Output = T> + Add<Output = T> + Div<Output = T> + Sub<Output = T> + Num,
+{
+    pub fn new(x: Vector<T>, y: Vector<T>) -> Self {
+        LinearRegression {
+            x,
+            y,
+            coefficient: None,
+            constant: None,
+            regression: None,
+            r_squared: None,
+        }
+    }
 
     pub fn x(&self) -> &Vector<T> {
         &self.x
@@ -152,19 +159,21 @@ where
 mod test {
     use std::io::Error;
 
-    use linear::vector::vector::Vector;
+    use linear::vector::{shape::Shape, vector::Vector};
 
-    use crate::reader::Reader;
+    use crate::{ml::linear_regression::Regression, reader::Reader};
 
     use super::LinearRegression;
 
     #[test]
     fn test_train() {
-        let data: Result<(Vector<f64>, Vector<f64>), Error> =
-            Reader::read_2d_csv("test_data/data_1d.csv");
+        let data: Result<Vec<Vec<f64>>, Error> = Reader::read_nd_csv("test_data/data_1d.csv", 2);
         match data {
             Ok(data) => {
-                let mut lr: LinearRegression<f64> = LinearRegression::new(data.0, data.1);
+                let mut lr: LinearRegression<f64> = LinearRegression::new(
+                    Vector::new(data[0].clone(), Shape::Col),
+                    Vector::new(data[1].clone(), Shape::Col),
+                );
 
                 assert_eq!(100, lr.x().elements().len());
                 assert_eq!(100, lr.y().elements().len());
@@ -185,11 +194,13 @@ mod test {
 
     #[test]
     fn test_plot() {
-        let data: Result<(Vector<f64>, Vector<f64>), Error> =
-            Reader::read_2d_csv("test_data/data_1d.csv");
+        let data: Result<Vec<Vec<f64>>, Error> = Reader::read_nd_csv("test_data/data_1d.csv", 2);
         match data {
             Ok(data) => {
-                let mut lr: LinearRegression<f64> = LinearRegression::new(data.0, data.1);
+                let mut lr: LinearRegression<f64> = LinearRegression::new(
+                    Vector::new(data[0].clone(), Shape::Col),
+                    Vector::new(data[1].clone(), Shape::Col),
+                );
 
                 lr.train();
                 lr.plot("images/2.6.png");
