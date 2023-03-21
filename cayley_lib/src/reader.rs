@@ -4,10 +4,7 @@ use std::{
     ops::{Add, Mul},
 };
 
-use linear::{
-    num::Num,
-    vector::{shape::Shape, vector::Vector},
-};
+use linear::num::Num;
 
 pub struct Reader {}
 
@@ -34,7 +31,7 @@ impl Reader {
 
                 Ok(containers)
             }
-            Err(e) => return Err(e),
+            Err(e) => Err(e),
         }
     }
 

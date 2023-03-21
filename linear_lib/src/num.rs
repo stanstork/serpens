@@ -61,7 +61,7 @@ impl Num for i32 {
     }
 
     fn as_f64(&self) -> f64 {
-        self.clone() as f64
+        *self as f64
     }
 }
 
@@ -107,6 +107,6 @@ impl Num for f64 {
     }
 
     fn as_f64(&self) -> f64 {
-        self.clone()
+        *self
     }
 }

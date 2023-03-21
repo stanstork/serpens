@@ -137,13 +137,22 @@ where
         true
     }
 
-    pub fn get_row(&self, row: usize) -> Vec<&T> {
+    pub fn get_row(&self, row: usize) -> Vec<T> {
         self.elements
             .iter()
             .skip(row * self.size.cols())
             .take(self.size.cols())
-            .into_iter()
+            .copied()
             .collect()
+    }
+
+    pub fn get_col(&self, col: usize) -> Vec<T> {
+        let mut column: Vec<T> = vec![];
+        for i in 0..self.size().rows() {
+            let row = self.get_row(i);
+            column.push(row[col]);
+        }
+        column
     }
 
     pub fn get(&self, row: usize, col: usize) -> Option<&T> {
@@ -267,6 +276,23 @@ mod test {
         for r in 0..matrix.size().rows() {
             let row = matrix.get_row(r);
             assert_eq!(row.len(), matrix.size().cols());
+        }
+    }
+
+    #[test]
+    fn test_get_col() {
+        let elements: Vec<Vec<f64>> = vec![
+            vec![1.2, 4.7, 7.0],
+            vec![2.4, 6.1, 1.0],
+            vec![3.5, 7.2, 7.5],
+        ];
+        let matrix: Matrix<f64> = Matrix::new(&elements);
+        for c in 0..matrix.size().cols() {
+            let col: Vec<f64> = matrix.get_col(c);
+            println!("{:?}", col);
+            for i in 0..elements.len() {
+                assert_eq!(col[i], elements[i][c]);
+            }
         }
     }
 

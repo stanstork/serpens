@@ -30,7 +30,7 @@ impl PrintHelper {
     pub fn print_rows<T: Mul<Output = T> + Add<Output = T> + Num>(matrix: &Matrix<T>, max: T) {
         let width: usize = max.to_string().len();
         for r in 0..matrix.size().rows() {
-            let row: Vec<&T> = matrix.get_row(r);
+            let row: Vec<T> = matrix.get_row(r);
 
             let first = row.first().unwrap();
             if r == 0 {

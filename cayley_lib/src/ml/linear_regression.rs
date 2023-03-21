@@ -1,7 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use linear::{num::Num, vector::vector::Vector};
-use plotters::prelude::*;
 
 use super::{common::Common, regression::Regression};
 
@@ -37,52 +36,7 @@ where
             self.r_squared = Common::r_squared(self.y(), self.regression.as_ref().unwrap());
             return self.r_squared;
         }
-        return self.r_squared;
-    }
-
-    fn plot(&self, output: &str) {
-        let size: (u32, u32) = (1200, 800);
-        let root_area = BitMapBackend::new(output, size).into_drawing_area();
-
-        root_area.fill(&WHITE).unwrap();
-
-        let min_x = self.x().min().as_f64();
-        let min_y = self.y().min().as_f64();
-        let max_x = self.x().max().as_f64();
-        let max_y = self.y().max().as_f64();
-
-        let label_area_size: i32 = 40;
-        let mut ctx = ChartBuilder::on(&root_area)
-            .set_label_area_size(LabelAreaPosition::Left, label_area_size)
-            .set_label_area_size(LabelAreaPosition::Bottom, label_area_size)
-            .build_cartesian_2d(min_x..max_x, min_y..max_y)
-            .unwrap();
-
-        ctx.configure_mesh().draw().unwrap();
-
-        let circle_size = 5;
-
-        ctx.draw_series(
-            self.x()
-                .elements()
-                .iter()
-                .zip(self.y().elements().iter())
-                .map(|e| (e.0.as_f64(), e.1.as_f64()))
-                .collect::<Vec<(f64, f64)>>()
-                .iter()
-                .map(|point| Circle::new(*point, circle_size, &BLUE)),
-        )
-        .unwrap();
-        ctx.draw_series(LineSeries::new(
-            self.x()
-                .elements()
-                .iter()
-                .zip(self.regression().unwrap().elements().iter())
-                .map(|e| (e.0.as_f64(), e.1.as_f64()))
-                .collect::<Vec<(f64, f64)>>(),
-            &RED,
-        ))
-        .unwrap();
+        self.r_squared
     }
 }
 
@@ -141,7 +95,10 @@ mod test {
 
     use linear::vector::{shape::Shape, vector::Vector};
 
-    use crate::{ml::linear_regression::Regression, reader::Reader};
+    use crate::{
+        ml::{common::Common, linear_regression::Regression},
+        reader::Reader,
+    };
 
     use super::LinearRegression;
 
@@ -183,7 +140,7 @@ mod test {
                 );
 
                 lr.train();
-                lr.plot("images/2.6.png");
+                Common::plot_2d(lr.x(), lr.y(), lr.regression().unwrap(), "images/2.6.png");
                 // validate image manually
             }
             Err(e) => panic!("ERROR: {}", e),

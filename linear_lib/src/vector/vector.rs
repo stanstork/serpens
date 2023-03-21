@@ -113,14 +113,14 @@ where
     pub fn mul(&self, val: T) -> Vector<T> {
         Vector {
             elements: self.map(val, |a, &b| a * b),
-            shape: self.shape.clone(),
+            shape: self.shape,
         }
     }
 
     pub fn add(&self, val: T) -> Vector<T> {
         Vector {
             elements: self.map(val, |a, &b| a + b),
-            shape: self.shape.clone(),
+            shape: self.shape,
         }
     }
 
@@ -136,8 +136,15 @@ where
 
         Ok(Vector {
             elements,
-            shape: self.shape.clone(),
+            shape: self.shape,
         })
+    }
+
+    pub fn sorted(&self) -> Vector<T> {
+        let mut elements = self.elements.clone();
+        elements.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        Vector::new(elements, *self.shape())
     }
 
     pub fn map(&self, val: T, f: fn(T, &T) -> T) -> Vec<T> {
@@ -184,7 +191,7 @@ where
     fn clone(&self) -> Self {
         Self {
             elements: self.elements.clone(),
-            shape: self.shape.clone(),
+            shape: self.shape,
         }
     }
 }

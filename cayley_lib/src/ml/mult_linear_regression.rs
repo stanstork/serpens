@@ -8,10 +8,7 @@ use linear::{
 
 use crate::alg::gaussian_elimination::GaussianElimination;
 
-use super::{
-    common::Common,
-    regression::{self, Regression},
-};
+use super::{common::Common, regression::Regression};
 
 pub struct MultLinearRegression<T> {
     x: Matrix<T>,
@@ -21,7 +18,7 @@ pub struct MultLinearRegression<T> {
     weights: Option<Vector<T>>,
 }
 
-impl<'a, T> Regression<T> for MultLinearRegression<T>
+impl<T> Regression<T> for MultLinearRegression<T>
 where
     T: Mul<Output = T>
         + Add<Output = T>
@@ -67,11 +64,7 @@ where
             self.r_squared = Common::r_squared(self.y(), self.regression.as_ref().unwrap());
             return self.r_squared;
         }
-        return self.r_squared;
-    }
-
-    fn plot(&self, output: &str) {
-        todo!()
+        self.r_squared
     }
 }
 
@@ -81,9 +74,9 @@ where
 {
     pub fn new(data: Vec<Vec<T>>) -> Self {
         let mut elements: Vec<Vec<T>> = vec![vec![]; data[0].len()];
-        for i in 0..data[0].len() {
-            for j in 0..(data.len() - 1) {
-                elements[i].push(data[j][i]);
+        for (i, item) in elements.iter_mut().enumerate().take(data[0].len()) {
+            for el in data.iter().take(data.len() - 1) {
+                item.push(el[i]);
             }
         }
 
@@ -118,13 +111,22 @@ where
     pub fn weights(&self) -> Option<&Vector<T>> {
         self.weights.as_ref()
     }
+
+    pub fn regression(&self) -> Option<&Vector<T>> {
+        self.regression.as_ref()
+    }
 }
 
 #[cfg(test)]
 mod test {
     use std::io::Error;
 
-    use crate::{ml::regression::Regression, reader::Reader};
+    use linear::vector::{shape::Shape, vector::Vector};
+
+    use crate::{
+        ml::{self, common::Common, regression::Regression},
+        reader::Reader,
+    };
 
     use super::MultLinearRegression;
 
@@ -146,6 +148,39 @@ mod test {
 
                 assert!(mlr.r_squared().is_some());
                 assert!(mlr.r_squared().unwrap() > 0.99);
+            }
+            Err(e) => panic!("ERROR: {}", e),
+        }
+    }
+
+    #[test]
+    fn test_poly() {
+        let data: Result<Vec<Vec<f64>>, Error> =
+            Reader::read_nd_csv("/home/stan/serpens/cayley_lib/test_data/data_poly.csv", 2);
+        match data {
+            Ok(data) => {
+                let ones: Vec<f64> = vec![1.0; data[0].len()];
+                let x: Vec<f64> = data[0].clone();
+                let x2: Vec<f64> = x.iter().map(|e| e * e).collect();
+
+                let mut mlr: MultLinearRegression<f64> =
+                    MultLinearRegression::new(vec![ones, x, x2, data[1].clone()]);
+
+                mlr.train();
+
+                assert!(mlr.regression().is_some());
+
+                Common::plot_2d(
+                    &Vector::new(mlr.x().get_col(1), Shape::Col).sorted(),
+                    &mlr.y().sorted(),
+                    &mlr.regression().unwrap().sorted(),
+                    "images/poly.png",
+                );
+                // validate image manually
+
+                assert!(mlr.r_squared().unwrap() > 0.999);
+
+                println!("{:?}", mlr.r_squared().unwrap());
             }
             Err(e) => panic!("ERROR: {}", e),
         }
