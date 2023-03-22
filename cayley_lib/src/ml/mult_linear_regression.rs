@@ -124,7 +124,7 @@ mod test {
     use linear::vector::{shape::Shape, vector::Vector};
 
     use crate::{
-        ml::{self, common::Common, regression::Regression},
+        ml::{common::Common, regression::Regression},
         reader::Reader,
     };
 

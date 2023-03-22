@@ -10,14 +10,14 @@ use plotters::{
 pub struct Common {}
 
 impl Common {
-    pub fn r_squared<T>(y: &Vector<T>, regression: &Vector<T>) -> Option<T>
+    pub fn r_squared<T>(x: &Vector<T>, y: &Vector<T>) -> Option<T>
     where
         T: Mul<Output = T> + Add<Output = T> + Div<Output = T> + Sub<Output = T> + Num,
     {
-        let rss: Result<Vector<T>, &str> = y.add_vector(&regression.mul(T::minus_one()));
+        let rss: Result<Vector<T>, &str> = x.add_vector(&y.mul(T::minus_one()));
         match rss {
             Ok(rss) => {
-                let tss: Vector<T> = y.add(y.mean().mul(T::minus_one()));
+                let tss: Vector<T> = x.add(x.mean().mul(T::minus_one()));
                 match rss.dot(&rss) {
                     Ok(rss_dot) => match tss.dot(&tss) {
                         Ok(tss_dot) => {
