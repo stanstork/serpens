@@ -21,7 +21,7 @@ impl GaussianElimination {
             .enumerate()
             .take(a.size().rows())
         {
-            let mut row: Vec<T> = a.get_row(r).iter().map(|e| *(*e)).collect();
+            let mut row: Vec<T> = a.get_row(r).to_vec();
             row.push(*b.get(r).unwrap());
             *item = row;
         }

@@ -2,4 +2,5 @@
 members = [
     "linear_lib",
     "cayley_lib",
+    "ml_examples"
 ]

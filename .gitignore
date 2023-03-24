@@ -13,3 +13,7 @@ Cargo.lock
 # Added by cargo
 
 /target
+cayley_lib/images/
+
+/ml_examples/target
+/ml_examples/Cargo.lock

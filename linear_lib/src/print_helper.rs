@@ -20,7 +20,7 @@ impl PrintHelper {
         println!("⎡ {first:>width$} ⎤");
 
         for element in elements.iter().take(elements.len() - 1).skip(1) {
-            println!("| {element:>width$} |");
+            println!("⎢ {element:>width$} ⎢");
         }
 
         let last = elements.last().unwrap();
@@ -30,7 +30,7 @@ impl PrintHelper {
     pub fn print_rows<T: Mul<Output = T> + Add<Output = T> + Num>(matrix: &Matrix<T>, max: T) {
         let width: usize = max.to_string().len();
         for r in 0..matrix.size().rows() {
-            let row: Vec<&T> = matrix.get_row(r);
+            let row: Vec<T> = matrix.get_row(r);
 
             let first = row.first().unwrap();
             if r == 0 {
