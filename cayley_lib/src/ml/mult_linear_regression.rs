@@ -130,6 +130,8 @@ mod test {
 
     use super::MultLinearRegression;
 
+    use rand::{rngs::ThreadRng, Rng};
+
     #[test]
     fn test_train() {
         let data: Result<Vec<Vec<f64>>, Error> =
@@ -137,6 +139,41 @@ mod test {
         match data {
             Ok(data) => {
                 let mut mlr: MultLinearRegression<f64> = MultLinearRegression::new(data);
+
+                println!("{:?}", mlr.x());
+                println!("{:?}", mlr.y());
+
+                mlr.train();
+
+                println!("{:?}", mlr.weights().unwrap());
+                println!("{:?}", mlr.r_squared());
+
+                assert!(mlr.r_squared().is_some());
+                assert!(mlr.r_squared().unwrap() > 0.99);
+            }
+            Err(e) => panic!("ERROR: {}", e),
+        }
+    }
+
+    #[test]
+    fn test_noise() {
+        let data: Result<Vec<Vec<f64>>, Error> =
+            Reader::read_nd_csv("/home/stan/serpens/cayley_lib/test_data/data_2d.csv", 3);
+        match data {
+            Ok(data) => {
+                let mut mlr_data: Vec<Vec<f64>> = vec![vec![]; data.len() + 1];
+                for i in 0..(data.len() - 1) {
+                    mlr_data[i] = data[i].clone();
+                }
+
+                let mut rng: ThreadRng = rand::thread_rng();
+                mlr_data[data.len() - 1] = (0..data[0].len())
+                    .map(|_| rng.gen_range(0.0..150.0))
+                    .collect();
+
+                mlr_data[data.len()] = data.last().unwrap().clone();
+
+                let mut mlr: MultLinearRegression<f64> = MultLinearRegression::new(mlr_data);
 
                 println!("{:?}", mlr.x());
                 println!("{:?}", mlr.y());

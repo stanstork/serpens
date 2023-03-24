@@ -160,6 +160,18 @@ where
     }
 }
 
+impl Vector<f64> {
+    pub fn linspace(start: f64, stop: f64, num: usize) -> Vector<f64> {
+        let elements: Vec<f64> = Generator::linspace(start, stop, num);
+        Vector::new(elements, Shape::Col)
+    }
+
+    pub fn sin(values: &Vec<f64>) -> Vector<f64> {
+        let elements: Vec<f64> = values.iter().map(|v| v.sin()).collect();
+        Vector::new(elements, Shape::Col)
+    }
+}
+
 impl<T> Mul<T> for Vector<T>
 where
     T: Mul<Output = T> + Add<Output = T> + Num,
@@ -198,7 +210,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{matrix::matrix::Matrix, vector::shape::Shape};
+    use crate::{matrix::matrix::Matrix, plotter::Plotter, vector::shape::Shape};
 
     use super::Vector;
 
@@ -338,5 +350,13 @@ mod test {
         let vec: Vector<i32> = Vector::new(ELEMENTS.to_vec(), Shape::Row);
         let max: i32 = vec.max();
         assert_eq!(7, max);
+    }
+
+    #[test]
+    fn test_sin() {
+        let x: Vector<f64> = Vector::linspace(0.0, 6.0 * std::f64::consts::PI, 100);
+        let y: Vector<f64> = Vector::sin(&x.elements().to_vec());
+
+        Plotter::plot_series(&x.elements, &y.elements, "images/sin.png")
     }
 }
